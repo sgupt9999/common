@@ -1,0 +1,92 @@
+# Creating a file for some of the common functions used in most of the scripts
+
+check_euid() {
+# Check if running as root. If not exit
+if [[ $EUID != "0" ]]
+then
+	echo
+	echo "##########################################################"
+	echo "ERROR. You need to have root privileges to run this script"
+	echo "##########################################################"
+	echo >&5
+	echo "##########################################################" >&5
+	echo "ERROR. You need to have root privileges to run this script" >&5
+	echo "##########################################################" >&5
+	exit 1
+fi
+}
+
+print_msg_start() {
+# Print the message in MESSAGE variable with the correct formatting
+	LEN=${#MESSAGE}
+	START=1
+	echo
+	for ((i=$START; i<=$LEN; i++)); do echo -n "#"; done
+	echo
+	echo "$MESSAGE"
+	
+	echo >&5
+	for ((i=$START; i<=$LEN; i++)); do echo -n "#" >&5; done
+	echo >&5
+	echo "$MESSAGE" >&5
+}
+
+print_msg_done() {
+# Print the done message after the task is completed
+	LEN=${#MESSAGE}
+        START=1
+        echo "Done"
+        for ((i=$START; i<=$LEN; i++)); do echo -n "#"; done
+        echo
+
+        echo "Done" >&5
+        for ((i=$START; i<=$LEN; i++)); do echo -n "#" >&5; done
+        echo >&5
+
+}
+
+install_httpd() {
+# Uninstall and install a new copy of apache on this machine
+# Create virtual hosts on ports 80 and 443
+# The certficates should be installed in /etc/pki/tls/certs
+# The IP address is in IPSERVER variable
+
+if yum list installed httpd >&5 2>&5
+then
+	systemctl -q is-active httpd && {
+	systemctl stop httpd
+	systemctl -q disable httpd
+	}
+
+	MESSAGE="Removing old copies of httpd"
+	print_msg_start
+	yum remove httpd mod_ssl -y >&5 2>&5
+	print_msg_done
+fi
+
+
+MESSAGE="Installing httpd"
+print_msg_start
+yum install httpd mod_ssl -y >&5 2>&5
+print_msg_done
+sleep 3
+
+
+MESSAGE="Configuring virtual hosts"
+print_msg_start
+
+echo "<VirtualHost $IPSERVER:80>" >> /etc/httpd/conf/httpd.conf
+echo "</VirtualHost>" >> /etc/httpd/conf/httpd.conf
+echo "<VirtualHost $IPSERVER:443>" >> /etc/httpd/conf/httpd.conf
+
+echo "SSLEngine on" >> /etc/httpd/conf/httpd.conf
+echo "SSLCertificateFile /etc/pki/tls/certs/myserver.crt" >> /etc/httpd/conf/httpd.conf
+echo "SSLCertificateKeyFile /etc/pki/tls/certs/myserver.key" >> /etc/httpd/conf/httpd.conf
+echo "</VirtualHost>" >> /etc/httpd/conf/httpd.conf
+
+systemctl start httpd
+systemctl -q enable httpd
+
+print_msg_done
+
+}
