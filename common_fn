@@ -16,6 +16,30 @@ then
 fi
 }
 
+print_msg_header() {
+# Print the message in MESSAGE variable with the correct formatting
+# This is for the script header message which has a slightly different formatting
+	LEN=${#MESSAGE}
+	START=1
+	echo
+	for ((i=$START; i<=$LEN; i++)); do echo -n "#"; done
+	echo
+	echo "$MESSAGE"
+	for ((i=$START; i<=$LEN; i++)); do echo -n "#"; done
+	echo
+	
+	echo >&5
+	for ((i=$START; i<=$LEN; i++)); do echo -n "#" >&5; done
+	echo >&5
+	echo "$MESSAGE" >&5
+	for ((i=$START; i<=$LEN; i++)); do echo -n "#" >&5; done
+	echo >&5
+
+	sleep 3
+}
+
+
+
 print_msg_start() {
 # Print the message in MESSAGE variable with the correct formatting
 	LEN=${#MESSAGE}
